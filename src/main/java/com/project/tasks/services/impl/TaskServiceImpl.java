@@ -1,13 +1,13 @@
 package com.project.tasks.services.impl;
 
-import com.project.tasks.domain.entities.Task;
-import com.project.tasks.domain.entities.TaskList;
-import com.project.tasks.domain.entities.TaskPriority;
-import com.project.tasks.domain.entities.TaskStatus;
+import com.project.tasks.domain.entities.*;
 import com.project.tasks.repositories.TaskListRepository;
 import com.project.tasks.repositories.TaskRepository;
+import com.project.tasks.security.UserPrincipal;
 import com.project.tasks.services.TaskService;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +22,11 @@ public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
     private final TaskListRepository taskListRepository;
+
+    private boolean isAdmin(User user) {
+        return user.getRoles().stream()
+                .anyMatch(role -> role.getName().equalsIgnoreCase("ROLE_ADMIN"));
+    }
 
     public TaskServiceImpl(TaskRepository taskRepository, TaskListRepository taskListRepository) {
         this.taskRepository = taskRepository;
@@ -91,7 +96,16 @@ public class TaskServiceImpl implements TaskService {
         Task existingTask = taskRepository.findByTaskListIdAndId(taskListId, taskId)
                 .orElseThrow( () -> new IllegalArgumentException("Task not found!"));
 
-        if (!isAdmin(username) && !existing.getAssignedUser().getUsername().equals(username)) {
+
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserPrincipal principal = (UserPrincipal) auth.getPrincipal();
+        User user = principal.getUser();
+        String username = user.getUsername();
+
+        if (!isAdmin(user) &&
+                (existingTask.getAssignedUser() == null ||
+                        !existingTask.getAssignedUser().getUsername().equals(username))) {
             throw new AccessDeniedException("No puedes modificar esta tarea.");
         }
 

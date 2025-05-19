@@ -127,6 +127,14 @@ public class Task {
         this.updated = updated;
     }
 
+    public User getAssignedUser() {
+        return assignedUser;
+    }
+
+    public void setAssignedUser(User assignedUser) {
+        this.assignedUser = assignedUser;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -156,5 +164,6 @@ public class Task {
     }
 
     @ManyToOne
+    @JoinColumn(name = "user_id")
     private User assignedUser;
 }

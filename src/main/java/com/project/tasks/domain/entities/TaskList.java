@@ -3,6 +3,7 @@ package com.project.tasks.domain.entities;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -22,16 +23,18 @@ public class TaskList {
     @Column(name = "description")
     private String description;
 
-    @OneToMany(mappedBy = "taskList", cascade = {
-            CascadeType.REMOVE, CascadeType.PERSIST
-    })
-    private List<Task> tasks;
+    @ManyToOne
+    @JoinColumn(name = "project_id")
+    private Project project;
 
     @Column(name = "created", nullable = false)
     private LocalDateTime created;
 
     @Column(name = "updated", nullable = false)
     private LocalDateTime updated;
+
+    @OneToMany(mappedBy = "taskList", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Task> tasks = new ArrayList<>();
 
     public TaskList() {
     }
@@ -69,13 +72,6 @@ public class TaskList {
         this.description = description;
     }
 
-    public List<Task> getTasks() {
-        return tasks;
-    }
-
-    public void setTasks(List<Task> tasks) {
-        this.tasks = tasks;
-    }
 
     public LocalDateTime getCreated() {
         return created;
@@ -93,6 +89,14 @@ public class TaskList {
         this.updated = updated;
     }
 
+    public List<Task> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(List<Task> tasks) {
+        this.tasks = tasks;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
@@ -102,7 +106,7 @@ public class TaskList {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, title, description, tasks, created, updated);
+        return Objects.hash(id, title, description, created, updated);
     }
 
     @Override
@@ -111,7 +115,6 @@ public class TaskList {
                 "id=" + id +
                 ", title='" + title + '\'' +
                 ", description='" + description + '\'' +
-                ", tasks=" + tasks +
                 ", created=" + created +
                 ", updated=" + updated +
                 '}';
